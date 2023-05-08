@@ -34,7 +34,7 @@ RUN mkdir afl-testcases
 RUN curl https://lcamtuf.coredump.cx/afl/demo/afl_testcases.tgz | tar xzC afl-testcases
 RUN mkdir pdfium-latest
 RUN curl -L https://github.com/bblanchon/pdfium-binaries/releases/latest/download/pdfium-linux-x64.tgz | tar xzC pdfium-latest
-RUN git clone --depth 1 https://github.com/libvips/libvips.git
+RUN git clone --depth 1 --branch oss-fuzz-issue-58618 https://github.com/kleisauke/libvips.git
 RUN git clone --depth 1 https://github.com/madler/zlib.git
 RUN git clone --depth 1 https://github.com/libexif/libexif.git
 RUN git clone --depth 1 https://github.com/mm2/Little-CMS.git lcms
