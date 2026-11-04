@@ -29,10 +29,15 @@ RUN apt-get update && apt-get install -y \
   nasm \
   python3-pip
 RUN pip3 install meson ninja
-RUN mkdir pdfium-latest
-RUN curl -L https://github.com/bblanchon/pdfium-binaries/releases/latest/download/pdfium-linux-x64.tgz | tar xzC pdfium-latest
 RUN git clone --depth 1 https://github.com/libvips/libvips.git
 RUN git clone --depth 1 https://github.com/libvips/seed-corpora.git
+
+# Clone dependencies into $SRC/third_party to exclude them from the
+# light introspector's static analysis.
+# See: https://github.com/google/oss-fuzz/pull/16430#issuecomment-6638576960
+WORKDIR $SRC/third_party
+RUN mkdir pdfium-latest
+RUN curl -L https://github.com/bblanchon/pdfium-binaries/releases/latest/download/pdfium-linux-x64.tgz | tar xzC pdfium-latest
 RUN git clone --depth 1 https://github.com/madler/zlib.git
 RUN git clone --depth 1 https://github.com/libexif/libexif.git
 RUN git clone --depth 1 https://github.com/mm2/Little-CMS.git lcms
@@ -48,14 +53,10 @@ RUN git clone --depth 1 https://github.com/dloebl/cgif.git
 RUN git clone --depth 1 https://github.com/google/highway.git
 RUN git clone --depth 1 https://github.com/google/libultrahdr.git
 
-# Prevent fuzz-introspector from analyzing harnesses in sub-dependencies
-RUN find "$SRC" -type f \( -name '*.c' -o -name '*.cc' -o -name '*.cpp' \) \
-  -not -path "$SRC/aflplusplus/*" \
-  -not -path "$SRC/fuzztest/*" \
-  -not -path "$SRC/honggfuzz/*" \
-  -not -path "$SRC/libfuzzer/*" \
-  -not -path "$SRC/libvips/*" \
-  -exec sed -i 's/LLVMFuzzerTestOneInput/DisableFuzzerTestOneInput/g' {} +
+# Symlink the third-party dependencies into $SRC/, where the upstream
+# build script expects to find them.
+WORKDIR $SRC
+RUN ln -s third_party/* .
 
 WORKDIR libvips
 COPY build.sh $SRC/
